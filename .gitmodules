@@ -1,0 +1,3 @@
+[submodule "hakase"]
+	path = hakase
+	url = git@github.com:liva/hakase.git
