@@ -1,3 +1,6 @@
 [submodule "hakase"]
 	path = lecture8/hakase
 	url = https://github.com/liva/hakase.git
+[submodule "lecture9/hakase"]
+	path = lecture9/hakase
+	url = https://github.com/liva/hakase.git
