@@ -37,13 +37,13 @@ baremetal.o: raw.cc pbaremetal.cc framebuffer.cc font.c
 usb: baremetal.o
 	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.o -C ../hardware usb
 
-image:
+image: baremetal.o
 	rm -f disk.img
 	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.o -C ../hardware /tmp/disk.img
 	cp /tmp/disk.img .
 
 clean:
-	rm -f disk.img *.bin $(OBJS) $(DEPS)
+	rm -f disk.img *.bin $(OBJS) $(DEPS) baremetal.o
 	$(MAKE) -C $(ROOT_DIR) clean
 	$(MAKE) -C ../hardware clean
 
