@@ -38,7 +38,6 @@ usb: baremetal.o
 	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.o -C ../hardware usb
 
 image: baremetal.o
-	rm -f disk.img
 	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.o -C ../hardware /tmp/disk.img
 	cp /tmp/disk.img .
 
@@ -49,9 +48,23 @@ clean:
 
 else
 
-.PHONY: vnc
+.PHONY: vnc vboxtest vboxkill
 
 vnc:
 	vncviewer localhost:15900
+
+vboxtest:
+	$(MAKE) image
+	-VBoxManage unregistervm hakase_baremetal_test --delete
+	rm -f disk.vdi
+	VBoxManage createvm --name hakase_baremetal_test --register
+	VBoxManage modifyvm hakase_baremetal_test --ioapic on --chipset ich9 --hpet on --firmware efi
+	VBoxManage convertfromraw disk.img disk.vdi
+	VBoxManage storagectl hakase_baremetal_test --name SATAController --add sata --controller IntelAHCI --bootable on
+	VBoxManage storageattach hakase_baremetal_test --storagectl SATAController --port 0 --device 0 --type hdd --medium disk.vdi
+	VBoxManage startvm hakase_baremetal_test --type gui
+
+vboxkill:
+	-VBoxManage controlvm hakase_baremetal_test poweroff
 
 endif

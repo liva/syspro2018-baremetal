@@ -21,7 +21,6 @@
 
 .globl pml4t
   
-.extern main
 multibootheader_start:
   .long MULTIBOOT2_HEADER_MAGIC
   .long MULTIBOOT_ARCHITECTURE_I386
