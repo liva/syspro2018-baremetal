@@ -77,7 +77,7 @@ vboxtest:
 	-VBoxManage unregistervm hakase_baremetal_test --delete
 	rm -f disk.vdi
 	VBoxManage createvm --name hakase_baremetal_test --register
-	VBoxManage modifyvm hakase_baremetal_test --ioapic on --chipset ich9 --hpet on --firmware efi
+	VBoxManage modifyvm hakase_baremetal_test --memory 4096 --ioapic on --chipset ich9 --hpet on --firmware efi
 	VBoxManage convertfromraw disk.img disk.vdi
 	VBoxManage storagectl hakase_baremetal_test --name SATAController --add sata --controller IntelAHCI --bootable on
 	VBoxManage storageattach hakase_baremetal_test --storagectl SATAController --port 0 --device 0 --type hdd --medium disk.vdi
