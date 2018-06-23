@@ -16,13 +16,13 @@ BAREMETAL_CXXFLAGS = $(FLAGS) --std=c++14
 .PHONY: test usb image
 
 define baremetal_cxx_template
-$(1).o: $(1).cc
-	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
+$(1:%.cc=%.o): $(1)
+	g++ $(BAREMETAL_CXXFLAGS) -c $(1) -o $(1:%.cc=%.o)
 endef
 
 define baremetal_c_template
-$(1).o: $(1).c
-	gcc $(BAREMETAL_CFLAGS) -c $^ -o $@
+$(1:%.c=%.o): $(1)
+	gcc $(BAREMETAL_CFLAGS) -c $(1) -o $(1:%.c=%.o)
 endef
 
 $(foreach file,$(filter %.cc,$(BAREMETAL_SOURCES)),$(eval $(call baremetal_cxx_template,$(file))))
@@ -59,7 +59,7 @@ image: baremetal.a
 	cp /tmp/disk.img .
 
 clean:
-	rm -f disk.img *.bin $(OBJS) $(DEPS) baremetal.a
+	rm -f disk.img *.bin *.o *.d baremetal.a
 	$(MAKE) -C $(ROOT_DIR) clean
 	$(MAKE) -C ../hardware clean
 
