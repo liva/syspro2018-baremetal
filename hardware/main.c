@@ -22,6 +22,12 @@ void panic() {
   }
 }
 
+int main();
+void _main() {
+  main();
+  panic();
+}
+
 void cmain() {
   struct rsdp_descriptor *rsdp = multiboot_get_rsdp_desc();
   if (rsdp == NULL) {
@@ -43,7 +49,7 @@ void cmain() {
 
   hw_info->hpet_addr = (uint64_t *)hpet->address;
 
-  for(uint64_t i = 0x100000; i < 0x4000000; i++) {
+  for(uint64_t i = 0x100000; i < 0x400000; i++) {
     *(uint64_t *)(i + 0x80000000) = *(uint64_t *)i;
   }
 
@@ -56,7 +62,7 @@ void cmain() {
   for(int i = 0; i < 512; i++) {
     pd[i]  = (0x80000000UL + 0x200000UL * i) | (1 << 0) | (1 << 1) | (1 << 2) | (1<<7);
   }
-  __asm__ volatile("movq %0, %%cr3; call main;"::"r"((uint64_t)pml4t));
+  __asm__ volatile("movq %0, %%cr3; call _main;"::"r"((uint64_t)pml4t));
 
   /*
   struct apic_descriptor *madt = acpi_get_apic_desc();

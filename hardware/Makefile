@@ -23,11 +23,11 @@ default:
 
 FORCE:
 
-baremetal.o: $(BAREMETAL_OBJ) FORCE
-	@if [ ! -e baremetal.o ] || [ "`sum $(BAREMETAL_OBJ)`" != "`sum baremetal.o`" ]; then cp $(BAREMETAL_OBJ) baremetal.o; fi
+baremetal.a: $(BAREMETAL_OBJ) FORCE
+	@if [ ! -e baremetal.a ] || [ "`sum $(BAREMETAL_OBJ)`" != "`sum baremetal.a`" ]; then cp $(BAREMETAL_OBJ) baremetal.a; fi
 
-multiboot.elf: $(OBJS) multiboot.ld baremetal.o
-	g++ -nostdinc -nostdlib -Tmultiboot.ld -Wl,--nmagic $(OBJS) baremetal.o -o $@
+multiboot.elf: $(OBJS) multiboot.ld baremetal.a
+	g++ -nostdinc -nostdlib -Tmultiboot.ld -Wl,--nmagic $(OBJS) baremetal.a -o $@
 
 $(MOUNT_DIR)/boot/grub/grub.cfg: grub.cfg
 	sudo cp grub.cfg $(MOUNT_DIR)/boot/grub/grub.cfg
@@ -68,5 +68,5 @@ endif
 endif
 
 clean:
-	rm -f /tmp/disk.img multiboot.elf *.o
+	rm -f /tmp/disk.img multiboot.elf *.o baremetal.a
 

@@ -80,27 +80,34 @@ entry:
   movl %eax, (%edi)
   movl $0, 4(%edi)
 
-  // PDPT1に4GBストレートマップする
+  // PDPT1に0-1GB, 2GB-4GBストレートマップする
   movl $pdpt1, %edi
-  movl $0, %eax
-  orl  $((1 << 0) | (1 << 1) | (1 << 2) | (1 << 7)), %eax
+  movl $pd1, %eax
+  orl  $((1 << 0) | (1 << 1) | (1 << 2)), %eax
   movl %eax, (%edi)
   movl $0, 4(%edi)
   
-  movl $0x40000000, %eax
-  orl  $((1 << 0) | (1 << 1) | (1 << 2) | (1 << 7)), %eax
-  movl %eax, 8(%edi)
-  movl $0, 12(%edi)
-
-  movl $0x80000000, %eax
-  orl  $((1 << 0) | (1 << 1) | (1 << 2) | (1 << 7)), %eax
+  movl $pd2, %eax
+  orl  $((1 << 0) | (1 << 1) | (1 << 2)), %eax
   movl %eax, 16(%edi)
   movl $0, 20(%edi)
 
-  movl $0xC0000000, %eax
-  orl  $((1 << 0) | (1 << 1) | (1 << 2) | (1 << 7)), %eax
+  movl $pd3, %eax
+  orl  $((1 << 0) | (1 << 1) | (1 << 2)), %eax
   movl %eax, 24(%edi)
   movl $0, 28(%edi)
+
+  movl $pd1, %edi
+  mov  $0x00000000, %eax
+  call setup_1G_table
+
+  movl $pd2, %edi
+  mov  $0x80000000, %eax
+  call setup_1G_table
+
+  movl $pd3, %edi
+  mov  $0xC0000000, %eax
+  call setup_1G_table
 
   // ページテーブルの構築はここまで
 
@@ -126,7 +133,21 @@ entry:
   movl %eax, %cr0
   lgdt gdtr
   ljmp $0x10, $entry64
-  
+
+setup_1G_table:
+  mov $0, %ecx
+setup_1G_table_loop:
+  orl  $((1 << 0) | (1 << 1) | (1 << 2) | (1 << 7)), %eax
+  mov %eax, (%edi)
+  inc %ecx
+  cmp $512, %ecx
+  je  setup_1G_table_end
+  add $8, %edi
+  add $0x200000, %eax
+  jmp setup_1G_table_loop
+setup_1G_table_end:
+  ret
+
 .code64
 entry64:
   // IA-32eモード
@@ -166,5 +187,14 @@ pml4t:
   .skip 4096
 
 pdpt1:
+  .skip 4096
+
+pd1:
+  .skip 4096
+
+pd2:
+  .skip 4096
+
+pd3:
   .skip 4096
 

@@ -7,18 +7,20 @@ TEST_OBJS := exec.o $(TEST_DIR)test.o
 OBJS := $(TEST_OBJS)
 DEPS := $(OBJS:%.o=%.d)
 .DEFAULT_GOAL:=test
-CXXFLAGS += -pthread
+FLAGS = -O0 -Wall -nostdinc -nostdlib -iquote $(ROOT_DIR)
+CFLAGS = $(FLAGS)
+CXXFLAGS = $(FLAGS) --std=c++14
 
 .PHONY: test usb image
 
-raw.bin: raw.cc hakase.cc framebuffer.cc font.c
-	g++ -O0 -Wall --std=c++14 -nostdinc -nostdlib -iquote $(ROOT_DIR) -T raw.ld $^ -o $@
+raw.bin: raw.o hakase.o framebuffer.o font.o
+	g++ -T raw.ld $^ -o $@
 
 $(MODULE_DIR)libelf_loader.a:
 	$(MAKE) -C $(ROOT_DIR)elf_loader all
 
 exec.bin: $(TEST_OBJS) $(MODULE_DIR)libelf_loader.a
-	g++ $(CXXFLAGS) -o $@ $^
+	g++ -pthread -o $@ $^
 
 test: exec.bin raw.bin
 	pkill Xvfb 2>&1 || :
@@ -31,18 +33,18 @@ test: exec.bin raw.bin
 	@$(foreach test, $(TESTS), $(TEST_DIR)test_hakase.sh 0 $(shell pwd)/$(test).bin $(shell pwd)/raw.bin &&) :
 	$(MAKE) unload
 
-baremetal.o: raw.cc pbaremetal.cc framebuffer.cc font.c
-	g++ -O0 -Wall --std=c++14 -nostdinc -nostdlib -iquote $(ROOT_DIR) $^ -o $@
+baremetal.a: raw.o pbaremetal.o framebuffer.o font.o
+	ar rcs $@ $^
 
-usb: baremetal.o
-	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.o -C ../hardware usb
+usb: baremetal.a
+	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.a -C ../hardware usb
 
-image: baremetal.o
-	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.o -C ../hardware /tmp/disk.img
+image: baremetal.a
+	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.a -C ../hardware /tmp/disk.img
 	cp /tmp/disk.img .
 
 clean:
-	rm -f disk.img *.bin $(OBJS) $(DEPS) baremetal.o
+	rm -f disk.img *.bin $(OBJS) $(DEPS) baremetal.a
 	$(MAKE) -C $(ROOT_DIR) clean
 	$(MAKE) -C ../hardware clean
 
@@ -55,6 +57,8 @@ vnc:
 
 vboxtest:
 	$(MAKE) image
+	-VBoxManage controlvm hakase_baremetal_test poweroff
+	sleep 1
 	-VBoxManage unregistervm hakase_baremetal_test --delete
 	rm -f disk.vdi
 	VBoxManage createvm --name hakase_baremetal_test --register
