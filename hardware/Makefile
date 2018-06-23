@@ -27,7 +27,7 @@ baremetal.a: $(BAREMETAL_OBJ) FORCE
 	@if [ ! -e baremetal.a ] || [ "`sum $(BAREMETAL_OBJ)`" != "`sum baremetal.a`" ]; then cp $(BAREMETAL_OBJ) baremetal.a; fi
 
 multiboot.elf: $(OBJS) multiboot.ld baremetal.a
-	g++ -nostdinc -nostdlib -Tmultiboot.ld -Wl,--nmagic $(OBJS) baremetal.a -o $@
+	g++ -O0 -nostdinc -nostdlib -Tmultiboot.ld -Wl,--nmagic,-S $(OBJS) baremetal.a -o $@
 
 $(MOUNT_DIR)/boot/grub/grub.cfg: grub.cfg
 	sudo cp grub.cfg $(MOUNT_DIR)/boot/grub/grub.cfg
