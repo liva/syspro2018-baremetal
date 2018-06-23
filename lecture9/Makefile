@@ -8,13 +8,25 @@ OBJS := $(TEST_OBJS)
 DEPS := $(OBJS:%.o=%.d)
 .DEFAULT_GOAL:=test
 FLAGS = -O0 -Wall -nostdinc -nostdlib -iquote $(ROOT_DIR)
-CFLAGS = $(FLAGS)
-CXXFLAGS = $(FLAGS) --std=c++14
+BAREMETAL_CFLAGS = $(FLAGS)
+BAREMETAL_CXXFLAGS = $(FLAGS) --std=c++14
 
 .PHONY: test usb image
 
+raw.o: raw.cc
+	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
+
+hakase.o: hakase.cc
+	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
+
+framebuffer.o: framebuffer.cc
+	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
+
+font.o: font.c
+	gcc $(BAREMETAL_CFLAGS) -c $^ -o $@
+
 raw.bin: raw.o hakase.o framebuffer.o font.o
-	g++ -T raw.ld $^ -o $@
+	g++ $(BAREMETAL_CXXFLAGS) -T raw.ld $^ -o $@
 
 $(MODULE_DIR)libelf_loader.a:
 	$(MAKE) -C $(ROOT_DIR)elf_loader all
