@@ -6,6 +6,8 @@ TESTS = exec
 TEST_OBJS := exec.o $(TEST_DIR)test.o
 OBJS := $(TEST_OBJS)
 DEPS := $(OBJS:%.o=%.d)
+BAREMETAL_SOURCES := pbaremetal.cc hakase.cc raw.cc framebuffer.cc font.c
+BAREMETAL_OBJS := $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(BAREMETAL_SOURCES)))
 .DEFAULT_GOAL:=test
 FLAGS = -O0 -Wall -nostdinc -nostdlib -iquote $(ROOT_DIR)
 BAREMETAL_CFLAGS = $(FLAGS)
@@ -13,20 +15,24 @@ BAREMETAL_CXXFLAGS = $(FLAGS) --std=c++14
 
 .PHONY: test usb image
 
-raw.o: raw.cc
+define baremetal_cxx_template
+$(1).o: $(1).cc
 	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
+endef
 
-hakase.o: hakase.cc
-	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
-
-framebuffer.o: framebuffer.cc
-	g++ $(BAREMETAL_CXXFLAGS) -c $^ -o $@
-
-font.o: font.c
+define baremetal_c_template
+$(1).o: $(1).c
 	gcc $(BAREMETAL_CFLAGS) -c $^ -o $@
+endef
+
+$(foreach file,$(filter %.cc,$(BAREMETAL_SOURCES)),$(eval $(call baremetal_cxx_template,$(file))))
+$(foreach file,$(filter %.c,$(BAREMETAL_SOURCES)),$(eval $(call baremetal_c_template,$(file))))
 
 raw.bin: raw.o hakase.o framebuffer.o font.o
 	g++ $(BAREMETAL_CXXFLAGS) -T raw.ld $^ -o $@
+
+baremetal.a: raw.o pbaremetal.o framebuffer.o font.o
+	ar rcs $@ $^
 
 $(MODULE_DIR)libelf_loader.a:
 	$(MAKE) -C $(ROOT_DIR)elf_loader all
@@ -44,9 +50,6 @@ test: exec.bin raw.bin
 	@echo "info: Starting baremetal program..."
 	@$(foreach test, $(TESTS), $(TEST_DIR)test_hakase.sh 0 $(shell pwd)/$(test).bin $(shell pwd)/raw.bin &&) :
 	$(MAKE) unload
-
-baremetal.a: raw.o pbaremetal.o framebuffer.o font.o
-	ar rcs $@ $^
 
 usb: baremetal.a
 	$(MAKE) BAREMETAL_OBJ=$(shell pwd)/baremetal.a -C ../hardware usb
