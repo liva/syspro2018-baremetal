@@ -28,10 +28,10 @@ endef
 $(foreach file,$(filter %.cc,$(BAREMETAL_SOURCES)),$(eval $(call baremetal_cxx_template,$(file))))
 $(foreach file,$(filter %.c,$(BAREMETAL_SOURCES)),$(eval $(call baremetal_c_template,$(file))))
 
-raw.bin: raw.o hakase.o framebuffer.o font.o
+raw.bin: $(filter-out pbaremetal.o,$(BAREMETAL_OBJS))
 	g++ $(BAREMETAL_CXXFLAGS) -T raw.ld $^ -o $@
 
-baremetal.a: raw.o pbaremetal.o framebuffer.o font.o
+baremetal.a: $(filter-out hakase.o,$(BAREMETAL_OBJS))
 	ar rcs $@ $^
 
 $(MODULE_DIR)libelf_loader.a:
